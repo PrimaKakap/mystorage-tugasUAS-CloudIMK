@@ -13,7 +13,14 @@ import {
   faDatabase,
 } from "@fortawesome/free-solid-svg-icons";
 
-export default function Sidebar() {
+interface SidebarProps {
+  onNewFolder: () => void;
+}
+
+export default function Sidebar({
+  onNewFolder,
+}: SidebarProps) {
+
   const menus = [
     {
       title: "My Drive",
@@ -47,6 +54,7 @@ export default function Sidebar() {
 
       {/* Logo */}
       <div className="px-6 py-7 border-b">
+
         <div className="flex items-center gap-3">
 
           <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-xl shadow-lg">
@@ -64,26 +72,27 @@ export default function Sidebar() {
           </div>
 
         </div>
+
       </div>
 
-      {/* Button New */}
+      {/* Button */}
       <div className="px-5 mt-6">
 
         <button
+          onClick={onNewFolder}
           className="
-          w-full
-          bg-blue-600
-          hover:bg-blue-700
-          text-white
-          py-3
-          rounded-2xl
-          flex
-          items-center
-          justify-center
-          gap-3
-          transition
-          shadow-lg
-          cursor-pointer
+            w-full
+            bg-blue-600
+            hover:bg-blue-700
+            text-white
+            py-3
+            rounded-2xl
+            flex
+            items-center
+            justify-center
+            gap-3
+            transition
+            shadow-lg
           "
         >
           <FontAwesomeIcon icon={faPlus} />
@@ -106,6 +115,7 @@ export default function Sidebar() {
         <div className="space-y-2">
 
           {menus.map((menu, index) => (
+
             <button
               key={index}
               className={`
@@ -117,7 +127,6 @@ export default function Sidebar() {
                 py-3
                 rounded-xl
                 transition
-                cursor-pointer
 
                 ${
                   menu.active
@@ -132,7 +141,9 @@ export default function Sidebar() {
               />
 
               <span>{menu.title}</span>
+
             </button>
+
           ))}
 
         </div>
@@ -140,6 +151,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Storage */}
+
       <div className="p-5">
 
         <div className="bg-gray-50 border rounded-2xl p-5">
@@ -151,6 +163,7 @@ export default function Sidebar() {
             </div>
 
             <div>
+
               <h4 className="font-semibold">
                 Storage
               </h4>
@@ -163,18 +176,9 @@ export default function Sidebar() {
 
           </div>
 
-          {/* Progress */}
-
           <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
 
-            <div
-              className="
-                h-full
-                w-1/4
-                bg-blue-600
-                rounded-full
-              "
-            />
+            <div className="h-full w-1/4 bg-blue-600 rounded-full" />
 
           </div>
 
