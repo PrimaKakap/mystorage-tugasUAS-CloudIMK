@@ -1,5 +1,17 @@
 "use client";
 
+import { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faFile,
+  faDownload,
+  faTrash,
+  faPen,
+  faShareNodes,
+  faEllipsisVertical,
+  faEye,
+} from "@fortawesome/free-solid-svg-icons";
+
 interface FileCardProps {
   file: {
     id: number;
@@ -9,37 +21,138 @@ interface FileCardProps {
 }
 
 export default function FileCard({ file }: FileCardProps) {
+  const [open, setOpen] = useState(false);
+
+  async function deleteFile() {
+    if (!confirm("Hapus file ini?")) return;
+
+    const res = await fetch(`/api/files/${file.id}`, {
+      method: "DELETE",
+    });
+
+    if (res.ok) {
+      location.reload();
+    } else {
+      alert("Gagal menghapus file");
+    }
+  }
+
+  async function renameFile() {
+    const name = prompt("Nama file baru", file.original_name);
+
+    if (!name) return;
+
+    const res = await fetch(`/api/files/${file.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        original_name: name,
+      }),
+    });
+
+    if (res.ok) {
+      location.reload();
+    } else {
+      alert("Rename gagal");
+    }
+  }
+
+  function shareFile() {
+    navigator.clipboard.writeText(
+      window.location.origin + "/" + file.storage_path
+    );
+
+    alert("Link berhasil disalin");
+  }
+
   return (
-    <div className="bg-white border rounded-2xl p-5 hover:shadow-xl transition duration-300 flex flex-col justify-between">
-      {/* ICON & NAMA */}
-      <div onClick={() => window.open(file.storage_path, '_blank')} className="cursor-pointer">
-        <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center mb-4 text-2xl">
-          📄
-        </div>
-        <h3 className="font-semibold text-gray-800 truncate" title={file.original_name}>
-          {file.original_name}
-        </h3>
+    <div className="relative bg-white rounded-2xl border border-gray-600 p-5 hover:shadow-xl transition">
+
+      {/* MENU */}
+      <div className="absolute top-4 right-4">
+
+        <button
+          onClick={() => setOpen(!open)}
+          className="w-8 h-8 rounded-full hover:bg-gray-100"
+        >
+          <FontAwesomeIcon icon={faEllipsisVertical} />
+        </button>
+
+        {open && (
+          <div className="absolute right-0 mt-2 w-44 bg-gray-600 rounded-xl shadow-xl border overflow-hidden z-20">
+
+            <button
+              onClick={() => window.open(file.storage_path)}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 w-full text-left"
+            >
+              <FontAwesomeIcon icon={faEye} />
+              Preview
+            </button>
+
+            <a
+              href={file.storage_path}
+              download={file.original_name}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100"
+            >
+              <FontAwesomeIcon icon={faDownload} />
+              Download
+            </a>
+
+            <button
+              onClick={renameFile}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 w-full text-left"
+            >
+              <FontAwesomeIcon icon={faPen} />
+              Rename
+            </button>
+
+            <button
+              onClick={shareFile}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 w-full text-left"
+            >
+              <FontAwesomeIcon icon={faShareNodes} />
+              Share
+            </button>
+
+            <button
+              onClick={deleteFile}
+              className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 w-full text-left"
+            >
+              <FontAwesomeIcon icon={faTrash} />
+              Delete
+            </button>
+
+          </div>
+        )}
+
       </div>
 
-      {/* ACTIONS */}
-      <div className="mt-6 flex gap-2">
-        <a 
-          href={file.storage_path} 
-          download={file.original_name}
-          className="flex-1 text-center text-xs bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition"
+      {/* FILE */}
+      <div
+        onClick={() => window.open(file.storage_path)}
+        className="cursor-pointer"
+      >
+
+        <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mb-4">
+
+          <FontAwesomeIcon
+            icon={faFile}
+            className="text-3xl text-blue-600"
+          />
+
+        </div>
+
+        <h3
+          className="font-semibold text-gray-800 truncate"
+          title={file.original_name}
         >
-          Download
-        </a>
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText(window.location.origin + file.storage_path);
-            alert("Link berhasil disalin!");
-          }}
-          className="text-xs bg-gray-100 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-200 transition"
-        >
-          Share
-        </button>
+          {file.original_name}
+        </h3>
+
       </div>
+
     </div>
   );
 }

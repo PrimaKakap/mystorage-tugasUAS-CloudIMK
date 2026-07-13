@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { minio } from "@/lib/minio";
 import { NextResponse } from "next/server";
 import path from "path";
-import fs from "fs/promises";
 
 export async function POST(req: Request) {
   try {
@@ -12,39 +12,76 @@ export async function POST(req: Request) {
 
     if (!file || !folderId) {
       return NextResponse.json(
-        { error: "File atau folderId kosong" },
+        { error: "File atau Folder kosong" },
         { status: 400 }
       );
     }
 
+    // Buffer file
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const uploadDir = path.join(process.cwd(), "public/uploads");
-    await fs.mkdir(uploadDir, { recursive: true });
+    // Nama file unik
+    const ext = path.extname(file.name);
 
-    const fileName = `${Date.now()}-${file.name}`;
-    const filePath = path.join(uploadDir, fileName);
+    const fileName =
+      Date.now() +
+      "-" +
+      Math.random().toString(36).substring(2, 8) +
+      ext;
 
-    await fs.writeFile(filePath, buffer);
+    // Lokasi object di MinIO
+    const objectName = `folder/${folderId}/${fileName}`;
 
+    // Upload ke MinIO
+    await minio.putObject(
+      "mystorage",
+      objectName,
+      buffer,
+      file.size,
+      {
+        "Content-Type": file.type,
+      }
+    );
+
+    // Simpan metadata ke MySQL
     const saved = await prisma.files.create({
       data: {
-        folder_id: folderId,
-        owner_id: 1,
+        folder_id: BigInt(folderId),
+        owner_id: BigInt(1),
+
         original_name: file.name,
         storage_name: fileName,
-        file_size: file.size,
-        storage_path: `/uploads/${fileName}`,
+
+        extension: ext.replace(".", ""),
+        mime_type: file.type,
+
+        file_size: BigInt(file.size),
+
+        storage_path: objectName,
+        bucket_name: "mystorage",
+
+        is_starred: false,
+        is_deleted: false,
       },
     });
 
-    return NextResponse.json(saved);
+    return NextResponse.json({
+      success: true,
+      file: saved,
+    });
+
   } catch (err) {
     console.error(err);
+
     return NextResponse.json(
-      { error: "Upload gagal" },
-      { status: 500 }
+      {
+        success: false,
+        error: "Upload gagal",
+      },
+      {
+        status: 500,
+      }
     );
   }
 }
