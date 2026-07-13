@@ -23,6 +23,9 @@ interface FileCardProps {
 export default function FileCard({ file }: FileCardProps) {
   const [open, setOpen] = useState(false);
 
+  // URL file di MinIO
+  const fileUrl = `${process.env.NEXT_PUBLIC_MINIO_URL}/${process.env.NEXT_PUBLIC_MINIO_BUCKET}/${file.storage_path}`;
+
   async function deleteFile() {
     if (!confirm("Hapus file ini?")) return;
 
@@ -59,32 +62,33 @@ export default function FileCard({ file }: FileCardProps) {
     }
   }
 
-  function shareFile() {
-    navigator.clipboard.writeText(
-      window.location.origin + "/" + file.storage_path
-    );
+  function previewFile() {
+    window.open(fileUrl, "_blank");
+  }
 
+  function shareFile() {
+    navigator.clipboard.writeText(fileUrl);
     alert("Link berhasil disalin");
   }
 
   return (
-    <div className="relative bg-white rounded-2xl border border-gray-600 p-5 hover:shadow-xl transition">
+    <div className="relative bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-xl transition">
 
       {/* MENU */}
       <div className="absolute top-4 right-4">
 
         <button
           onClick={() => setOpen(!open)}
-          className="w-8 h-8 rounded-full hover:bg-gray-100"
+          className="w-8 h-8 rounded-full hover:bg-gray-100 transition"
         >
           <FontAwesomeIcon icon={faEllipsisVertical} />
         </button>
 
         {open && (
-          <div className="absolute right-0 mt-2 w-44 bg-gray-600 rounded-xl shadow-xl border overflow-hidden z-20">
+          <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-xl border overflow-hidden z-20">
 
             <button
-              onClick={() => window.open(file.storage_path)}
+              onClick={previewFile}
               className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 w-full text-left"
             >
               <FontAwesomeIcon icon={faEye} />
@@ -92,8 +96,9 @@ export default function FileCard({ file }: FileCardProps) {
             </button>
 
             <a
-              href={file.storage_path}
+              href={fileUrl}
               download={file.original_name}
+              target="_blank"
               className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100"
             >
               <FontAwesomeIcon icon={faDownload} />
@@ -131,7 +136,7 @@ export default function FileCard({ file }: FileCardProps) {
 
       {/* FILE */}
       <div
-        onClick={() => window.open(file.storage_path)}
+        onClick={previewFile}
         className="cursor-pointer"
       >
 

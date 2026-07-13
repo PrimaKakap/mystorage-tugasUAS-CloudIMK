@@ -1,77 +1,119 @@
 import { prisma } from "@/lib/prisma";
-import UploadFile from "./UploadFile";
+import UploadFile from "@/components/UploadFile";
+import FileCard from "@/components/FileCard";
 import { notFound } from "next/navigation";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFolderOpen } from "@fortawesome/free-solid-svg-icons";
 
 interface Props {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function FolderDetailPage({ params }: Props) {
-  const folderId = Number(params.id);
-
-  if (!folderId) return notFound();
+  const { id } = await params;
 
   const folder = await prisma.folders.findUnique({
-    where: { id: folderId },
-    include: { files: true },
+    where: {
+      id: Number(id),
+    },
+    include: {
+      files: true,
+    },
   });
 
   if (!folder) return notFound();
 
   return (
-    <div className="p-10">
+    <div className="p-8">
 
       {/* HEADER */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm mb-8">
 
-        <div>
-          <h1 className="text-3xl font-bold">
-            📁 {folder.folder_name}
-          </h1>
+        <div className="flex items-center justify-between">
 
-          <p className="text-gray-500 mt-1">
-            {folder.files.length} file
-          </p>
+          <div className="flex items-center gap-5">
+
+            <div className="w-20 h-20 rounded-3xl bg-yellow-100 flex items-center justify-center">
+              <FontAwesomeIcon
+                icon={faFolderOpen}
+                className="text-5xl text-yellow-500"
+              />
+            </div>
+
+            <div>
+
+              <h1 className="text-3xl font-bold text-gray-800">
+                {folder.folder_name}
+              </h1>
+
+              <p className="text-gray-500 mt-1">
+                {folder.files.length} File
+              </p>
+
+            </div>
+
+          </div>
+
+          <UploadFile folderId={Number(folder.id)} />
+
         </div>
 
-        {/* UPLOAD COMPONENT */}
-        <UploadFile folderId={folder.id} />
       </div>
 
-      {/* FILE LIST */}
-      <div className="bg-white border rounded-xl overflow-hidden">
+      {/* FILE GRID */}
 
-        <table className="w-full text-left">
+      {folder.files.length === 0 ? (
 
-          <thead className="bg-gray-50 text-sm text-gray-500">
-            <tr>
-              <th className="p-4">Nama</th>
-              <th className="p-4">Ukuran</th>
-            </tr>
-          </thead>
+        <div className="bg-white rounded-2xl border border-gray-200 py-24 text-center">
 
-          <tbody>
-            {folder.files.length === 0 ? (
-              <tr>
-                <td className="p-6 text-center text-gray-400" colSpan={2}>
-                  Belum ada file
-                </td>
-              </tr>
-            ) : (
-              folder.files.map((file) => (
-                <tr key={file.id.toString()} className="border-t">
-                  <td className="p-4">📄 File #{file.id.toString()}</td>
-                  <td className="p-4 text-gray-500">-</td>
-                </tr>
-              ))
-            )}
-          </tbody>
+          <div className="text-7xl mb-4">📂</div>
 
-        </table>
+          <h2 className="text-xl font-semibold text-gray-700">
+            Folder masih kosong
+          </h2>
 
-      </div>
+          <p className="text-gray-400 mt-2">
+            Upload file pertama ke folder ini.
+          </p>
+
+        </div>
+
+      ) : (
+
+        <>
+          <div className="flex items-center justify-between mb-5">
+
+            <h2 className="text-2xl font-bold text-gray-800">
+              Files
+            </h2>
+
+            <span className="text-gray-400">
+              {folder.files.length} Items
+            </span>
+
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+
+            {folder.files.map((file) => (
+              <FileCard
+                key={Number(file.id)}
+                file={{
+                  id: Number(file.id),
+                  original_name: file.original_name,
+                  storage_path: file.storage_path,
+                }}
+              />
+            ))}
+
+          </div>
+
+        </>
+
+      )}
+
     </div>
   );
 }
