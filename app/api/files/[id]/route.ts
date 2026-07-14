@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { minio } from "@/lib/minio";
+import { minioClient } from "@/lib/minio";
 import { NextRequest, NextResponse } from "next/server";
 
 interface Props {
@@ -44,14 +44,20 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
+      message: "File berhasil diubah",
     });
 
   } catch (err) {
     console.error(err);
 
     return NextResponse.json(
-      { error: "Rename gagal" },
-      { status: 500 }
+      {
+        success: false,
+        error: "Rename gagal",
+      },
+      {
+        status: 500,
+      }
     );
   }
 }
@@ -74,20 +80,25 @@ export async function DELETE(
 
     if (!file) {
       return NextResponse.json(
-        { error: "File tidak ditemukan" },
-        { status: 404 }
+        {
+          success: false,
+          error: "File tidak ditemukan",
+        },
+        {
+          status: 404,
+        }
       );
     }
 
-    // Hapus object di MinIO
+    // Hapus file dari MinIO
     if (file.bucket_name && file.storage_path) {
-      await minio.removeObject(
+      await minioClient.removeObject(
         file.bucket_name,
         file.storage_path
       );
     }
 
-    // Hapus database
+    // Hapus metadata dari database
     await prisma.files.delete({
       where: {
         id: BigInt(id),
@@ -96,14 +107,20 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
+      message: "File berhasil dihapus",
     });
 
   } catch (err) {
     console.error(err);
 
     return NextResponse.json(
-      { error: "Delete gagal" },
-      { status: 500 }
+      {
+        success: false,
+        error: "Delete gagal",
+      },
+      {
+        status: 500,
+      }
     );
   }
 }

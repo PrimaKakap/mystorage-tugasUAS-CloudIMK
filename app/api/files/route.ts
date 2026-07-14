@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { minio } from "@/lib/minio";
+import { minioClient } from "@/lib/minio";
 import { NextResponse } from "next/server";
 import path from "path";
 
@@ -17,11 +17,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Buffer file
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Nama file unik
     const ext = path.extname(file.name);
 
     const fileName =
@@ -30,11 +28,10 @@ export async function POST(req: Request) {
       Math.random().toString(36).substring(2, 8) +
       ext;
 
-    // Lokasi object di MinIO
     const objectName = `folder/${folderId}/${fileName}`;
 
     // Upload ke MinIO
-    await minio.putObject(
+    await minioClient.putObject(
       "mystorage",
       objectName,
       buffer,
@@ -44,23 +41,18 @@ export async function POST(req: Request) {
       }
     );
 
-    // Simpan metadata ke MySQL
+    // Simpan metadata ke database
     const saved = await prisma.files.create({
       data: {
         folder_id: BigInt(folderId),
         owner_id: BigInt(1),
-
         original_name: file.name,
         storage_name: fileName,
-
         extension: ext.replace(".", ""),
         mime_type: file.type,
-
         file_size: BigInt(file.size),
-
         storage_path: objectName,
         bucket_name: "mystorage",
-
         is_starred: false,
         is_deleted: false,
       },
@@ -70,7 +62,6 @@ export async function POST(req: Request) {
       success: true,
       file: saved,
     });
-
   } catch (err) {
     console.error(err);
 

@@ -8,18 +8,28 @@ import {
   faFile,
 } from "@fortawesome/free-solid-svg-icons";
 
-export default function StorageCard() {
-  const usedStorage = 25;
-  const totalStorage = 100;
+interface StorageCardProps {
+  storage: {
+    usedStorage: number;
+    totalStorage: number;
+    totalFolders: number;
+    totalFiles: number;
+  };
+}
 
-  const percentage = (usedStorage / totalStorage) * 100;
+export default function StorageCard({
+  storage,
+}: StorageCardProps) {
+  const percentage =
+    storage.totalStorage === 0
+      ? 0
+      : (storage.usedStorage / storage.totalStorage) * 100;
 
   return (
     <aside className="hidden xl:flex w-80 bg-white border-l border-gray-200 p-6 flex-col">
 
       {/* Title */}
       <div>
-
         <h2 className="text-2xl font-bold text-gray-800">
           Storage
         </h2>
@@ -27,7 +37,6 @@ export default function StorageCard() {
         <p className="text-sm text-gray-500 mt-1">
           Monitor your cloud storage usage
         </p>
-
       </div>
 
       {/* Storage Card */}
@@ -36,28 +45,24 @@ export default function StorageCard() {
         <div className="flex items-center justify-between">
 
           <div>
-
             <p className="text-sm opacity-90">
-              Total Storage
+              Total Storage Used
             </p>
 
             <h2 className="text-4xl font-bold mt-2">
-              {usedStorage} GB
+              {storage.usedStorage.toFixed(2)} GB
             </h2>
 
             <p className="opacity-80 mt-1">
-              of {totalStorage} GB
+              of {storage.totalStorage} GB
             </p>
-
           </div>
 
           <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center">
-
             <FontAwesomeIcon
               icon={faHardDrive}
               className="text-3xl"
             />
-
           </div>
 
         </div>
@@ -66,19 +71,17 @@ export default function StorageCard() {
         <div className="mt-8">
 
           <div className="flex justify-between text-sm mb-2">
-
             <span>Used</span>
 
-            <span>{percentage.toFixed(0)}%</span>
-
+            <span>{percentage.toFixed(1)}%</span>
           </div>
 
           <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden">
 
             <div
-              className="h-full bg-white rounded-full"
+              className="h-full bg-white rounded-full transition-all duration-700"
               style={{
-                width: `${percentage}%`,
+                width: `${Math.min(percentage, 100)}%`,
               }}
             />
 
@@ -97,6 +100,7 @@ export default function StorageCard() {
 
         <div className="space-y-4">
 
+          {/* Folder */}
           <div className="flex justify-between items-center bg-gray-50 rounded-2xl p-4">
 
             <div className="flex items-center gap-3">
@@ -124,12 +128,13 @@ export default function StorageCard() {
 
             </div>
 
-            <span className="font-bold">
-              32
+            <span className="font-bold text-lg">
+              {storage.totalFolders}
             </span>
 
           </div>
 
+          {/* Files */}
           <div className="flex justify-between items-center bg-gray-50 rounded-2xl p-4">
 
             <div className="flex items-center gap-3">
@@ -157,8 +162,8 @@ export default function StorageCard() {
 
             </div>
 
-            <span className="font-bold">
-              124
+            <span className="font-bold text-lg">
+              {storage.totalFiles}
             </span>
 
           </div>

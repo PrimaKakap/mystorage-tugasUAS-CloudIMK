@@ -27,26 +27,7 @@ export default function Sidebar({
       icon: faFolder,
       active: true,
     },
-    {
-      title: "Recent",
-      icon: faClock,
-    },
-    {
-      title: "Starred",
-      icon: faStar,
-    },
-    {
-      title: "Shared",
-      icon: faShareNodes,
-    },
-    {
-      title: "Trash",
-      icon: faTrash,
-    },
-    {
-      title: "Settings",
-      icon: faGear,
-    },
+
   ];
 
   return (
