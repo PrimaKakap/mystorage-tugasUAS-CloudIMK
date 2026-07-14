@@ -20,6 +20,8 @@ import {
   faFileCode,
   faFileLines,
 } from "@fortawesome/free-solid-svg-icons";
+import RenameModal from "./RenameModal";
+import { createPortal } from "react-dom";
 
 interface FileCardProps {
   file: {
@@ -31,6 +33,8 @@ interface FileCardProps {
 
 export default function FileCard({ file }: FileCardProps) {
   const [open, setOpen] = useState(false);
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   const fileUrl = `${process.env.NEXT_PUBLIC_MINIO_URL}/${process.env.NEXT_PUBLIC_MINIO_BUCKET}/${file.storage_path}`;
 
@@ -151,9 +155,7 @@ export default function FileCard({ file }: FileCardProps) {
     }
   }
 
-  async function renameFile() {
-    const name = prompt("Nama file baru", file.original_name);
-
+  async function renameFile(name: string) { // <- Ubah agar menerima parameter 'name'
     if (!name) return;
 
     const res = await fetch(`/api/files/${file.id}`, {
@@ -179,7 +181,13 @@ export default function FileCard({ file }: FileCardProps) {
 
   function shareFile() {
     navigator.clipboard.writeText(fileUrl);
-    alert("Link berhasil disalin");
+    setShowToast(true); // Tampilkan notifikasi kustom
+    setOpen(false);     // Tutup dropdown menu
+
+    // Sembunyikan notifikasi setelah 2.5 detik
+    setTimeout(() => {
+      setShowToast(false);
+    }, 2500);
   }
 
   return (
@@ -216,8 +224,12 @@ export default function FileCard({ file }: FileCardProps) {
               Download
             </a>
 
+            {/* SENSOR TOMBOL RENAME LAMA KAMU, UBAH JADI SEPERTI INI: */}
             <button
-              onClick={renameFile}
+              onClick={() => {
+                setIsRenameOpen(true); // <- Mengubah state jadi true untuk buka modal
+                setOpen(false);       // <- Menutup dropdown menu otomatis
+              }}
               className="text-gray-600 w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-100"
             >
               <FontAwesomeIcon icon={faPen} />
@@ -272,7 +284,22 @@ export default function FileCard({ file }: FileCardProps) {
         </p>
 
       </div>
+        <RenameModal
+        isOpen={isRenameOpen}
+        onClose={() => setIsRenameOpen(false)}
+        currentName={file.original_name}
+        onRename={renameFile}
+      />
 
+      {showToast && createPortal(
+        <div className="fixed bottom-5 right-5 bg-gray-950 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 z-[9999] border border-gray-800 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="w-7 h-7 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center">
+            <FontAwesomeIcon icon={faShareNodes} className="text-xs" />
+          </div>
+          <span className="text-sm font-medium pr-2">Link berhasil disalin!</span>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

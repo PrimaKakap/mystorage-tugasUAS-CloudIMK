@@ -18,7 +18,7 @@ export default function Header({
   onSearchChange,
 }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+    <header className="sticky top-0 bg-white border-b border-gray-200">
 
       <div className="flex items-center justify-between px-8 py-5">
 
